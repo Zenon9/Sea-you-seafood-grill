@@ -1,0 +1,147 @@
+CREATE DATABASE IF NOT EXISTS seafood_pos CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE seafood_pos;
+
+CREATE TABLE users (
+ user_id INT AUTO_INCREMENT PRIMARY KEY,
+ username VARCHAR(50) UNIQUE NOT NULL,
+ password VARCHAR(255) NOT NULL,
+ full_name VARCHAR(100) NOT NULL,
+ role ENUM('admin','cashier','kitchen') NOT NULL DEFAULT 'cashier',
+ status ENUM('active','inactive') NOT NULL DEFAULT 'active',
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE categories (category_id INT AUTO_INCREMENT PRIMARY KEY, category_name VARCHAR(60) UNIQUE NOT NULL, sort_order INT DEFAULT 0);
+CREATE TABLE products (
+ product_id INT AUTO_INCREMENT PRIMARY KEY, category_id INT NOT NULL, product_name VARCHAR(120) NOT NULL,
+ description VARCHAR(255), price DECIMAL(10,2) NOT NULL, stock INT NOT NULL DEFAULT 0,
+ image VARCHAR(255) DEFAULT NULL, status ENUM('Available','Unavailable') DEFAULT 'Available', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ FOREIGN KEY(category_id) REFERENCES categories(category_id)
+);
+CREATE TABLE restaurant_tables (table_id INT AUTO_INCREMENT PRIMARY KEY, table_number VARCHAR(20) UNIQUE NOT NULL, capacity INT DEFAULT 4, status ENUM('available','occupied') DEFAULT 'available');
+CREATE TABLE orders (
+ order_id INT AUTO_INCREMENT PRIMARY KEY, order_number VARCHAR(30) UNIQUE NOT NULL, user_id INT NOT NULL, table_id INT NULL,
+ customer_name VARCHAR(100) DEFAULT 'Walk-in', order_type ENUM('Dine-in','Takeout') DEFAULT 'Dine-in',
+ subtotal DECIMAL(10,2) NOT NULL, discount DECIMAL(10,2) DEFAULT 0, tax DECIMAL(10,2) DEFAULT 0, total_amount DECIMAL(10,2) NOT NULL,
+ order_status ENUM('Pending','Preparing','Ready','Served','Completed','Cancelled') DEFAULT 'Pending', payment_status ENUM('Unpaid','Paid') DEFAULT 'Unpaid',
+ order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ FOREIGN KEY(user_id) REFERENCES users(user_id), FOREIGN KEY(table_id) REFERENCES restaurant_tables(table_id)
+);
+CREATE TABLE order_items (
+ order_item_id INT AUTO_INCREMENT PRIMARY KEY, order_id INT NOT NULL, product_id INT NOT NULL, quantity INT NOT NULL,
+ price DECIMAL(10,2) NOT NULL, subtotal DECIMAL(10,2) NOT NULL, special_request VARCHAR(255) NULL,
+ FOREIGN KEY(order_id) REFERENCES orders(order_id) ON DELETE CASCADE, FOREIGN KEY(product_id) REFERENCES products(product_id)
+);
+CREATE TABLE payments (
+ payment_id INT AUTO_INCREMENT PRIMARY KEY, order_id INT NOT NULL, amount DECIMAL(10,2) NOT NULL,
+ payment_method ENUM('Cash','GCash','Card') NOT NULL, amount_received DECIMAL(10,2) NULL, change_amount DECIMAL(10,2) DEFAULT 0,
+ payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(order_id) REFERENCES orders(order_id)
+);
+CREATE TABLE activity_logs (log_id INT AUTO_INCREMENT PRIMARY KEY, user_id INT NULL, action VARCHAR(255) NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(user_id) REFERENCES users(user_id));
+
+INSERT INTO users(username,password,full_name,role) VALUES
+('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'System Administrator','admin'),
+('cashier', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'Main Cashier','cashier'),
+('kitchen', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'Kitchen Staff','kitchen');
+INSERT INTO categories(category_name,sort_order) VALUES ('Seafood',1),('Smoke & Grill',2),('Sizzling',3),('Appetizer',4),('Soup',5),('Vegetable',6),('Pork & Chicken',7),('Salad',8),('Sulit Meals',9),('Silog Meals',10),('Treats',11),('Drinks',12);
+INSERT INTO products(category_id,product_name,description,price,stock,status) VALUES
+(1,'Buttered Garlic Shrimp','Sea You menu item',285.00,50,'Available'),
+(1,'Buttered Garlic Crabs per 250g','Sea You menu item',450.00,50,'Available'),
+(1,'Mixed Seafood - Karawasan','Sea You menu item',650.00,50,'Available'),
+(1,'Kinilaw Tuna','Sea You menu item',260.00,50,'Available'),
+(1,'Sinuglaw','Sea You menu item',290.00,50,'Available'),
+(1,'Ginataang Crispy Pompano','Sea You menu item',400.00,50,'Available'),
+(1,'Steamed Pompano','Sea You menu item',400.00,50,'Available'),
+(1,'Sweet and Sour Pompano Shrimp','Sea You menu item',350.00,50,'Available'),
+(1,'Gambas','Sea You menu item',280.00,50,'Available'),
+(1,'Sweet and Sour Fish Fillet','Sea You menu item',250.00,50,'Available'),
+(1,'Adobong Bagaybay','Sea You menu item',230.00,50,'Available'),
+(1,'Shrimp Roll','Sea You menu item',260.00,50,'Available'),
+(1,'Crispy Shrimp','Sea You menu item',260.00,50,'Available'),
+(1,'Crispy Salmon Belly','Sea You menu item',280.00,50,'Available'),
+(1,'Fish Fillet','Sea You menu item',240.00,50,'Available'),
+(1,'Calamari','Sea You menu item',260.00,50,'Available'),
+(1,'Sashimi','Sea You menu item',290.00,50,'Available'),
+(1,'Pan Fried Tuna w/ Mushroom Sauce','Sea You menu item',280.00,50,'Available'),
+(1,'Ginataang Hipon','Sea You menu item',280.00,50,'Available'),
+(1,'Ginataang Alimasag','Sea You menu item',450.00,50,'Available'),
+(1,'Fish and Chips','Sea You menu item',270.00,50,'Available'),
+(2,'Grilled Tuna Belly','Sea You menu item',99.00,50,'Available'),
+(2,'Grilled Tuna Panga','Sea You menu item',90.00,50,'Available'),
+(2,'Grilled Pompano','Sea You menu item',400.00,50,'Available'),
+(2,'Grilled Pusit','Sea You menu item',80.00,50,'Available'),
+(2,'Grilled Scallops','Sea You menu item',250.00,50,'Available'),
+(2,'Chicken Leg BBQ','Sea You menu item',90.00,50,'Available'),
+(2,'Grilled Liempo','Sea You menu item',290.00,50,'Available'),
+(3,'Pork Sisig','Sea You menu item',245.00,50,'Available'),
+(3,'Tuna Sisig','Sea You menu item',185.00,50,'Available'),
+(3,'Burger Patty','Sea You menu item',175.00,50,'Available'),
+(3,'Sizzling Squid','Sea You menu item',160.00,50,'Available'),
+(3,'Sizzling Tofu','Sea You menu item',160.00,50,'Available'),
+(4,'Lumpia (6 pieces)','Sea You menu item',120.00,50,'Available'),
+(4,'Nachos','Sea You menu item',150.00,50,'Available'),
+(4,'Siomai - Dimsum (6 pieces)','Sea You menu item',120.00,50,'Available'),
+(4,'Dynamite Shrimp','Sea You menu item',280.00,50,'Available'),
+(4,'Keso Dinamita','Sea You menu item',150.00,50,'Available'),
+(4,'Tuna Chicharon','Sea You menu item',190.00,50,'Available'),
+(4,'Chips-n-Dip','Sea You menu item',160.00,50,'Available'),
+(5,'Sinigang na Salmon Strips','Sea You menu item',270.00,50,'Available'),
+(5,'Sinigang na Hipon','Sea You menu item',250.00,50,'Available'),
+(5,'Sinigang na Pompano','Sea You menu item',350.00,50,'Available'),
+(5,'Pork Sinigang','Sea You menu item',300.00,50,'Available'),
+(5,'Lauya na Baboy','Sea You menu item',300.00,50,'Available'),
+(5,'Lauya na Baka','Sea You menu item',320.00,50,'Available'),
+(5,'Tinolang Tuna','Sea You menu item',250.00,50,'Available'),
+(5,'Tinolang Pompano','Sea You menu item',350.00,50,'Available'),
+(5,'Tinolang Manok','Sea You menu item',240.00,50,'Available'),
+(5,'Bulalo','Sea You menu item',350.00,50,'Available'),
+(6,'Chopsuey','Sea You menu item',250.00,50,'Available'),
+(6,'Pinakbet','Sea You menu item',200.00,50,'Available'),
+(6,'Law-uy','Sea You menu item',195.00,50,'Available'),
+(6,'Adobong Kangkong w/ Tofu','Sea You menu item',200.00,50,'Available'),
+(6,'Mixed Veggies','Sea You menu item',235.00,50,'Available'),
+(6,'SEAYOU Ginataan Express','Sea You menu item',235.00,50,'Available'),
+(7,'Binagoongang Baboy','Sea You menu item',300.00,50,'Available'),
+(7,'Crispy Pata','Sea You menu item',750.00,50,'Available'),
+(7,'Pork Steak','Sea You menu item',300.00,50,'Available'),
+(7,'Buttered Chicken','Sea You menu item',450.00,50,'Available'),
+(7,'Chicken Wings','Sea You menu item',250.00,50,'Available'),
+(7,'Buffalo','Sea You menu item',250.00,50,'Available'),
+(7,'Salt & Pepper','Sea You menu item',220.00,50,'Available'),
+(7,'Barbeque','Sea You menu item',250.00,50,'Available'),
+(7,'Garlic Parmesan','Sea You menu item',240.00,50,'Available'),
+(7,'Teriyaki','Sea You menu item',230.00,50,'Available'),
+(7,'Sweet Chili','Sea You menu item',230.00,50,'Available'),
+(7,'Mango Habanero','Sea You menu item',230.00,50,'Available'),
+(7,'Orange','Sea You menu item',230.00,50,'Available'),
+(8,'Garden Salad','Sea You menu item',260.00,50,'Available'),
+(8,'Fruit Salad','Sea You menu item',165.00,50,'Available'),
+(9,'SM#1 Pancit/Tuna Lumpia/Rice/Cracklings/Siomai/Iced Tea','Sea You menu item',180.00,50,'Available'),
+(9,'SM#2 Fried Chicken/Pancit/Rice/Cracklings/Siomai/Iced Tea','Sea You menu item',200.00,50,'Available'),
+(9,'SM#3 Pork BBQ/Pancit/Rice/Cracklings/Siomai/Iced Tea','Sea You menu item',200.00,50,'Available'),
+(9,'SM#4 Chopsuey/Tuna Chicharon/Rice/Iced Tea','Sea You menu item',180.00,50,'Available'),
+(9,'SM#5 Fried Chicken/Rice/French Fries/Iced Tea','Sea You menu item',180.00,50,'Available'),
+(9,'SM#6 Burger Steak/French Fries/Rice/Iced Tea','Sea You menu item',180.00,50,'Available'),
+(9,'SM#7 Fish Fillet/French Fries/Egg/Rice/Iced Tea','Sea You menu item',170.00,50,'Available'),
+(10,'Porksilog','Sea You menu item',165.00,50,'Available'),
+(10,'Bangsilog','Sea You menu item',145.00,50,'Available'),
+(10,'Tosilog','Sea You menu item',135.00,50,'Available'),
+(10,'Chosilog','Sea You menu item',135.00,50,'Available'),
+(10,'Cornedsilog','Sea You menu item',145.00,50,'Available'),
+(10,'Embosilog','Sea You menu item',130.00,50,'Available'),
+(11,'Muffins','Sea You menu item',80.00,50,'Available'),
+(11,'Ice Cream (per scoop)','Sea You menu item',45.00,50,'Available'),
+(11,'Leche Flan','Sea You menu item',75.00,50,'Available'),
+(11,'Rainbow Salad','Sea You menu item',95.00,50,'Available'),
+(11,'Fruit Shakes','Sea You menu item',95.00,50,'Available'),
+(11,'Mais Con Yelo','Sea You menu item',95.00,50,'Available'),
+(12,'Iced Lemon Tea','Sea You menu item',50.00,50,'Available'),
+(12,'Red Iced Tea','Sea You menu item',50.00,50,'Available'),
+(12,'Cucumber Lemonade','Sea You menu item',90.00,50,'Available'),
+(12,'Minute Maid','Sea You menu item',40.00,50,'Available'),
+(12,'DM Canned Juice','Sea You menu item',65.00,50,'Available'),
+(12,'Mineral Water 500ml','Sea You menu item',35.00,50,'Available'),
+(12,'San Mig Apple','Sea You menu item',75.00,50,'Available'),
+(12,'San Mig Light','Sea You menu item',75.00,50,'Available'),
+(12,'Beer Pilsen','Sea You menu item',80.00,50,'Available'),
+(12,'Mule','Sea You menu item',80.00,50,'Available');
+INSERT INTO restaurant_tables(table_number,capacity) VALUES ('T01',4),('T02',4),('T03',6),('T04',6),('T05',8),('T06',4);

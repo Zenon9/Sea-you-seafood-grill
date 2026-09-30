@@ -5,7 +5,27 @@ require __DIR__.'/config/database.php';
 $cats=$pdo->query('SELECT * FROM categories ORDER BY sort_order,category_name')->fetchAll();
 $products=$pdo->query("SELECT p.*,c.category_name FROM products p JOIN categories c USING(category_id) WHERE p.status='Available' ORDER BY c.sort_order,p.product_name")->fetchAll();
 $tables=$pdo->query("SELECT * FROM restaurant_tables ORDER BY table_number")->fetchAll();
-?><!doctype html>
+?>
+<?php
+function menu_image($name,$category){
+  $n=strtolower($name);
+  if(strpos($n,'shrimp')!==false || strpos($n,'hipon')!==false || strpos($n,'gambas')!==false) return 'garlic-shrimp.jpg';
+  if(strpos($n,'crab')!==false || strpos($n,'alimasag')!==false) return 'crab.jpg';
+  if(strpos($n,'sweet and sour')!==false) return 'sweet-sour-fish.jpg';
+  if(strpos($n,'sisig')!==false) return 'sisig.jpg';
+  if(strpos($n,'liempo')!==false) return 'liempo.jpg';
+  if(strpos($n,'bbq')!==false || strpos($n,'barbeque')!==false) return 'pork-bbq.jpg';
+  if(strpos($n,'chicken')!==false || strpos($n,'manok')!==false || strpos($n,'buffalo')!==false || strpos($n,'teriyaki')!==false) return 'fried-chicken.jpg';
+  if(strpos($n,'chopsuey')!==false || strpos($n,'vegg')!==false || strpos($n,'pinakbet')!==false || strpos($n,'kangkong')!==false || strpos($n,'law-uy')!==false) return 'chopsuey.jpg';
+  if(strpos($n,'pancit')!==false) return 'noodles.jpg';
+  if(strpos($n,'pork')!==false || strpos($n,'baboy')!==false || strpos($n,'baka')!==false || strpos($n,'burger')!==false) return 'creamy-pork.jpg';
+  if($category==='Seafood' || $category==='Smoke & Grill' || strpos($n,'fish')!==false || strpos($n,'tuna')!==false || strpos($n,'pompano')!==false || strpos($n,'salmon')!==false || strpos($n,'bangsilog')!==false) return 'grilled-fish.jpg';
+  if($category==='Vegetable' || $category==='Salad') return 'chopsuey.jpg';
+  if($category==='Pork & Chicken' || $category==='Silog Meals' || $category==='Sulit Meals') return 'fried-chicken.jpg';
+  return 'grilled-fish.jpg';
+}
+?>
+<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Sea You Cashier POS</title><link rel="stylesheet" href="assets/css/style.css"></head>
 <body class="pos-body"><div class="pos-shell">
@@ -28,7 +48,7 @@ $tables=$pdo->query("SELECT * FROM restaurant_tables ORDER BY table_number")->fe
 </section>
 <section class="menu">
   <div class="menu-top"><input id="search" placeholder="Search menu..."></div>
-  <div id="products" class="products"><?php foreach($products as $p):?><button class="product" data-id="<?=$p['product_id']?>" data-cat="<?=$p['category_id']?>" data-name="<?=htmlspecialchars($p['product_name'],ENT_QUOTES)?>" data-price="<?=$p['price']?>" data-stock="<?=$p['stock']?>"><div class="food-icon">🍽️</div><b><?=htmlspecialchars($p['product_name'])?></b><span>₱<?=number_format($p['price'],2)?></span><small>Stock <?=$p['stock']?></small></button><?php endforeach;?></div>
+  <div id="products" class="products"><?php foreach($products as $p):?><button class="product" data-id="<?=$p['product_id']?>" data-cat="<?=$p['category_id']?>" data-name="<?=htmlspecialchars($p['product_name'],ENT_QUOTES)?>" data-price="<?=$p['price']?>" data-stock="<?=$p['stock']?>"><img class="food-photo" src="assets/menu/<?=menu_image($p['product_name'],$p['category_name'])?>" alt="<?=htmlspecialchars($p['product_name'],ENT_QUOTES)?>"><b><?=htmlspecialchars($p['product_name'])?></b><span>₱<?=number_format($p['price'],2)?></span><small>Stock <?=$p['stock']?></small></button><?php endforeach;?></div>
   <div class="categories"><button class="cat active" data-cat="all">All</button><?php foreach($cats as $c):?><button class="cat" data-cat="<?=$c['category_id']?>"><?=htmlspecialchars($c['category_name'])?></button><?php endforeach;?></div>
 </section>
 </main></div>
